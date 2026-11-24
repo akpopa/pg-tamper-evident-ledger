@@ -1,0 +1,54 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (PostgreSQL ${{ matrix.postgres }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        postgres: ["14", "15", "16", "17"]
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v5
+      # pg_dump (used by move_tenant.sh) must match the server's major version,
+      # so install that client from the PostgreSQL project's repository.
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-${{ matrix.postgres }}
+          echo "/usr/lib/postgresql/${{ matrix.postgres }}/bin" >> "$GITHUB_PATH"
+      - name: Run test suite
+        run: scripts/run_tests.sh
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check shell scripts
+        run: shellcheck --severity=warning scripts/*.sh tests/*.sh
