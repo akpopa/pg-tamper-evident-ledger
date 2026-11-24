@@ -6,6 +6,10 @@ A general-purpose, tamper-evident double-entry ledger for PostgreSQL: schema, fu
 
 Applications typically pull this repo in as a git submodule (for example at `vendor/ledger`), pinned to a tag. Application tables, owners (people and organizations), users, audit trails and APIs belong in the application, never here. Docs, ADRs and code must not name or describe any particular application that uses the ledger.
 
+## Working on this repository
+
+- **Before creating a branch or a pull request, check for open (unmerged) pull requests.** If one already covers the area, build on it (push to its branch or stack on it) instead of starting a parallel change from `main`.
+
 ## Model (v0.3.0, ADR-0002)
 
 - Tenants are schemas; names are chosen by the application (optional `LEDGER_TENANT_PREFIX`), at most 49 characters so per-tenant role names fit. A tenant may live in any database (ADR-0003); nothing in the ledger may cross tenants or assume they share a database.
